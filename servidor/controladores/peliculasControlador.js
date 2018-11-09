@@ -3,7 +3,7 @@ var con = require('../lib/conexionbd.js');
 
 function listarPeliculas(req, res){
 	
-	var sql = "SELECT * FROM peliculas";
+	var sql = "SELECT * FROM pelicula";
 	con.query(sql, function(err, result){
 		if(err){
 			console.log("Error en la consulta", err.message);
