@@ -2,16 +2,13 @@ var con = require('../lib/conexionbd.js');
 
 
 function listarPeliculas(req, res){
-	
-	//var sql = `SELECT * FROM pelicula WHERE  ${valorExist('titulo',req.query.titulo)} AND ${valorExist('genero_id',req.query.genero)} AND ${valorExist('anio',req.query.anio)} ORDER BY ${req.query.columna_orden} ${req.query.tipo_orden} ${limit(req.query.pagina,req.query.cantidad)}`;
-			   
-	con.query(`${peliculasSELECT(req,"*")} ${limit(req.query.pagina,req.query.cantidad)}`, function(err, resultPeliculas){
+	var datos = req.query;			   
+	con.query(`${getPeliculas(datos,"*")} ${limit(datos.pagina,datos.cantidad)}`, function(err, resultPeliculas){
 		if(err){
 			console.log("Error en la consulta", err.message);
 			return res.status(404).send("Error en la consulta");
 		}
-		//var sql = `SELECT COUNT(*) as total FROM pelicula WHERE  ${valorExist('titulo',req.query.titulo)} AND ${valorExist('genero_id',req.query.genero)} AND ${valorExist('anio',req.query.anio)} ORDER BY ${req.query.columna_orden} ${req.query.tipo_orden}`;
-		con.query(peliculasSELECT(req,"COUNT(*) as total"), function(err, resultCOUNT){
+		con.query(getPeliculas(datos,"COUNT(*) as total"), function(err, resultCOUNT){
 			if(err){
 				console.log("Error en la consulta", err.message);
 				return res.status(404).send("Error en la consulta");
@@ -22,37 +19,51 @@ function listarPeliculas(req, res){
 			}
 				
 			res.status(200).send(JSON.stringify(resultado));	
-		})
-			
-	})
-
-	
+		})			
+	})	
 }
 
-function peliculasSELECT(req,columnas){
-	return `SELECT ${columnas} FROM pelicula WHERE  ${valorExist('titulo',req.query.titulo)} AND ${valorExist('genero_id',req.query.genero)} AND ${valorExist('anio',req.query.anio)} ORDER BY ${req.query.columna_orden} ${req.query.tipo_orden}`;;
+
+function getPeliculas(datos,columnas){
+	return `SELECT ${columnas} FROM pelicula WHERE  ${campoExist('titulo',datos.titulo)} AND ${campoExist('genero_id',datos.genero)} AND ${campoExist('anio',datos.anio)} ORDER BY ${datos.columna_orden} ${datos.tipo_orden}`;
 }
 
-function valorExist(clave, valor){
+function getPeliculasConGenero(campo, genero){
+	return `SELECT p.id, p.titulo, p.poster, p.anio, p.fecha_lanzamiento, p.director, p.trama, p.duracion, p.puntuacion, g.nombre FROM pelicula AS p JOIN genero AS g WHERE ${campo} = ${genero}`
+}
+
+
+function campoExist(campo, valor){
 	if(valor == undefined || valor == null){
 		return 1;
 	}else{
-		if(clave === "titulo"){
-			return clave + " LIKE " +"'%"+ valor +"%'";
-		}else{
-			return clave + "=" + valor;
+		var result = "";
+		switch(campo){
+			case "titulo":
+				result = `${campo} LIKE '%${valor}%'`;
+			break;
+			case "anio_inicio":
+				result = `anio >= ${valor}`;
+			break;
+			case "anio_fin":
+				result = `anio <= ${valor}`;
+			break;
+			default:
+				result = `${campo} = ${valor}`;
 		}
-		
+
+		return 	result;	
 	}
 }
+
 
 function limit(pagina, cantidad){	
 	return "LIMIT " + (pagina -1) * 52 + "," + cantidad; 
 }
 
-function obtenerPelicula(req,res){
-	
-	var sqlPelicula = `SELECT p.titulo, p.poster, p.anio, p.fecha_lanzamiento, p.director, p.trama, p.duracion, p.puntuacion, g.nombre FROM pelicula AS p JOIN genero AS g WHERE p.id = ${req.params.id}`;
+
+function obtenerPelicula(req,res){		
+	var sqlPelicula = `${getPeliculasConGenero("p.id", req.params.id)}`;
 
 	con.query(sqlPelicula, function(err, result){
 		if(err){
@@ -60,7 +71,7 @@ function obtenerPelicula(req,res){
 			return res.status(500).send("Error en la consulta");
 		}
 
-		var pelicula = {
+		var pelicula = {			
 			"titulo": result[0].titulo,
 			"poster": result[0].poster,
 			"anio": result[0].anio,
@@ -68,8 +79,7 @@ function obtenerPelicula(req,res){
 			"director": result[0].director,
 			"trama": result[0].trama,
 			"duracion": result[0].duracion,
-			"puntuacion": result[0].puntuacion,
-			"nombre": result[0].nombre
+			"puntuacion": result[0].puntuacion
 		}
 
 		var sqlActores = `SELECT actor.nombre FROM actor JOIN actor_pelicula ON actor_pelicula.actor_id = actor.id WHERE actor_pelicula.pelicula_id = ${req.params.id}`;
@@ -85,5 +95,26 @@ function obtenerPelicula(req,res){
 	})
 }
 
+
+function recomendacion(req, res){
+	var datos = req.query;		
+	var sql = `${getPeliculasConGenero("g.nombre", '"'+ datos.genero +'"')} AND ${campoExist('anio_inicio',datos.anio_inicio)} AND ${campoExist('anio_fin',datos.anio_fin)} AND ${campoExist('puntuacion',datos.puntuacion)}`
+	
+	con.query(sql, function(err, result){
+		if(err){
+			console.log("Error en la consulta", err.message);
+			return res.status(404).send("Error en la consulta");
+		}
+
+		var resultado = {
+			"peliculas" : result
+		}
+			
+		res.status(200).send(JSON.stringify(resultado));	
+		
+	})	
+}
+
 module.exports.listarPeliculas = listarPeliculas;
 module.exports.obtenerPelicula = obtenerPelicula;
+module.exports.recomendacion = recomendacion;

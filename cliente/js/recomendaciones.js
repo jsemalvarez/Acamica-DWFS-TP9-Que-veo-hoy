@@ -62,8 +62,7 @@ function ControladorRecomendaciones() {
         //Este funcion redirige al usuario a la pagina que muestra mas informacion de la pelicula segun su id
         $(".botones-resultado .ver-mas").click(function() {
             var id = (self.pelicula_actual).id;
-            window.location.href = "info.html?id=" + id;
-            console.log(id);
+            window.location.href = "info.html?id=" + id;            
         });
 
         //se le asigna funcionalidad al boton "Otra opcion" que se va a mostrar debajo de la pelicula recomendada.
@@ -101,24 +100,24 @@ function ControladorRecomendaciones() {
 
         if (this.genero)
             query_params.genero = this.genero;
-
+        
         if (this.anio_inicio)
             query_params.anio_inicio = this.anio_inicio;
 
         if (this.anio_fin)
             query_params.anio_fin = this.anio_fin;
-
+        
         if (this.puntuacion)
             query_params.puntuacion = this.puntuacion;
 
         if (Object.keys(query_params).length !== 0) {
             var query = $.param(query_params);
-            var ruta = "/peliculas/recomendacion?"
+            var ruta = "/peliculas/recomendacion?";
         } else {
             var ruta = "/peliculas/recomendacion";
             var query = "";
         }
-
+               
         //se realiza el pedido de recomendacion al backend
         $.getJSON(servidor + ruta + query,
             function(data) {

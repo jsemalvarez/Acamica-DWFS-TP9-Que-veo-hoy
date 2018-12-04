@@ -2,8 +2,8 @@
     var server = 'http://localhost:8080';
     var params = location.search
     //se obtiene el id de la película de la cuál tenemos que obtener la información
-    var id = (params.split("="))[1];
-
+    var id = (params.split("="))[1];    
+    
     var controladorInformacionDePelicula = new ControladorInformacionDePelicula();
     //se obtiene la información de la película
     controladorInformacionDePelicula.obtenerPelicula(id);
@@ -14,7 +14,8 @@
                 
                 pelicula = data.pelicula;
                 actores = data.actores;
-                genero = data.pelicula.nombre;
+                //genero = data.pelicula.nombre;
+                genero = data.genero
 
                 $(".imagen").attr("src", pelicula.poster);
                 $(".titulo, title").html(pelicula.titulo + " (" + pelicula.anio + ")");
@@ -33,7 +34,7 @@
             },
             //esta función recibe como parámetro el id de una película y se encarga de pedirle al backend la información de la misma.
             this.obtenerPelicula = function(id) {
-                var self = this;
+                var self = this;                
                 $.getJSON(server + "/peliculas/" + id,
                     function(data) {
                         self.cargarDetalle(data);

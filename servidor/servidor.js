@@ -18,6 +18,8 @@ app.use(bodyParser.json());
 
 app.get('/peliculas',peliculasControlador.listarPeliculas);
 
+app.get('/peliculas/recomendacion',peliculasControlador.recomendacion);
+
 app.get('/peliculas/:id',peliculasControlador.obtenerPelicula);
 
 app.get('/generos',generosControlador.listarGeneros);
